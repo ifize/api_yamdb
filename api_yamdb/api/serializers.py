@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+
 from reviews.models import Category, Genre, Title, Review, Comment
 
 
@@ -17,14 +18,34 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ("name", "slug",)
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleReadSerializer(serializers.ModelSerializer):
+    # переопределение поля, чтобы получать не id, а объекты
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
+    # переопределение поля, тк оне не задано в модели
+    rating = serializers.IntegerField()
+    # переопределение типа поля, чтобы оно было необязательным
+    description = serializers.CharField(required=False)
 
     class Meta:
         model = Title
         fields = (
             "id", "name", "year", "rating",  "description", "genre", "category"
+        )
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(), slug_field="slug"
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(), slug_field="slug", many=True
+    )
+
+    class Meta:
+        model = Title
+        fields = (
+            "id", "name", "year", "rating", "description", "genre", "category"
         )
 
 
