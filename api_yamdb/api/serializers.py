@@ -19,6 +19,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
+    """Сериалайзер для запроса GET"""
     # переопределение поля, чтобы получать не id, а объекты
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
@@ -35,6 +36,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
+    """Сериалайзер для запросов POST, PATCH, DELETE"""
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(), slug_field="slug"
     )

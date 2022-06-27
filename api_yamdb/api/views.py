@@ -4,6 +4,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import Review, Category, Genre, Title
+from .filters import TitleFilter
 from .permissions import (IsAuthorOrReadOnlyPermission,
                           IsAdminOrReadOnlyPermission, )
 from .serializers import (
@@ -65,7 +66,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     permission_classes = (IsAdminOrReadOnlyPermission,)
     filter_backends = (DjangoFilterBackend,)
-    pagination_class = None
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ["list", "retrieve"]:

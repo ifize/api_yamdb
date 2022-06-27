@@ -75,6 +75,7 @@ class Review(models.Model):
             MinValueValidator(1)
         ]
     )
+
     def __str__(self):
         return self.text
 
