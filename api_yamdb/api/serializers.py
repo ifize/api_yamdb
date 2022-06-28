@@ -1,7 +1,34 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueValidator
 
-from reviews.models import Category, Genre, Title, Review, Comment
+from reviews.models import Category, Genre, Title, Review, Comment, User
+
+
+class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        validators=[UniqueValidator(queryset=User.objects.all())],
+        required=True,
+    )
+    email = serializers.EmailField(
+        validators=[UniqueValidator(queryset=User.objects.all())],
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'first_name', 'last_name', 'email', 'role', 'bio'
+        )
+
+
+class UserEditSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'first_name', 'last_name', 'email', 'role', 'bio'
+        )
+        read_only_fields = ('role',)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -26,12 +53,12 @@ class TitleReadSerializer(serializers.ModelSerializer):
     # переопределение поля, тк оне не задано в модели
     rating = serializers.IntegerField()
     # переопределение типа поля, чтобы оно было необязательным
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False,)
 
     class Meta:
         model = Title
         fields = (
-            "id", "name", "year", "rating",  "description", "genre", "category"
+            "id", "name", "year", "rating", "description", "genre", "category"
         )
 
 
