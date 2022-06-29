@@ -6,14 +6,14 @@ from rest_framework.pagination import LimitOffsetPagination
 from reviews.models import Review, Category, Genre, Title
 from .filters import TitleFilter
 from .permissions import (IsAuthorOrReadOnlyPermission,
-                          IsAdminOrReadOnlyPermission, )
+                          IsAdminOrReadOnlyPermission)
 from .serializers import (
     CommentSerializer,
     ReviewSerializer,
     CategorySerializer,
     GenreSerializer,
     TitleReadSerializer,
-    TitleWriteSerializer,
+    TitleWriteSerializer
 )
 
 
