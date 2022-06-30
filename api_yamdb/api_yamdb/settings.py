@@ -110,7 +110,13 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
-AUTH_USER_MODEL = 'reviews.User'
+AUTH_USER_MODEL = 'user.User'
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+
+DEFAULT_FROM_EMAIL = 'root@yamdb.com'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

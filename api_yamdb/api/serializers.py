@@ -26,7 +26,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
     # переопределение поля, тк оне не задано в модели
     rating = serializers.IntegerField()
     # переопределение типа поля, чтобы оно было необязательным
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False,)
 
     class Meta:
         model = Title
