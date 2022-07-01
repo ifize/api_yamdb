@@ -8,8 +8,8 @@ from reviews.models import (
     Genre,
     Review,
     Title,
-    User,
 )
+from user.models import User
 
 FILE_MODEL = {
     'category': Category,
@@ -18,6 +18,7 @@ FILE_MODEL = {
     'users': User,
     'review': Review,
     'comments': Comment,
+    'user': User
 }
 
 
@@ -28,7 +29,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         Функция импорта csv в базу данных проекта
-        запуск производится командой python manage.py import_csv
+        Запуск производится командой python manage.py import_csv
+        Заполнить базу можно только один раз, при повторном заполнении
+        появится ошибка UniqueConstraint
+        Если нужно удалить БД используйте python manage.py flush
+        Или просто удалите файл db.sqlite3
         """
         # открываем в менеджере контекста для автоматического закрытия файла
         # аргумент newline - чтобы знаки абзаца случайно не попали в БД
@@ -38,11 +43,15 @@ class Command(BaseCommand):
                     newline='',
                     encoding='utf-8'
             ) as csv_file:
+                # Ниже показано, как выглядит объект OrderedDict от DictReader
                 # DictReader =([('id', '1'), ('name', 'Фильм'), ('slug', 'movie')])
                 datareader = csv.DictReader(csv_file, delimiter=',')
                 model.objects.bulk_create(
                     [model(**row) for row in datareader])
-            if file_name == 'category':
-                break
-        print('data import was successful')
+                '''
+                Аналог кода:
+                Category.objects.bulk_create([Category(id=i['id'],
+                name=i['name'], slug=i['slug']) for i in datareader])
+                '''
+        print('Data import was successful')
 
