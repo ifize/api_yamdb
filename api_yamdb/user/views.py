@@ -1,84 +1,95 @@
-from django.shortcuts import get_object_or_404
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django.contrib.auth.tokens import default_token_generator
-
-
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action, api_view, permission_classes
+from django.shortcuts import get_object_or_404
+from rest_framework import status, viewsets
+from rest_framework.decorators import action, api_view
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
 
-from user.models import User
-from user.serializers import (
-    UserSerializer,
-    UserEditSerializer,
-    RegisterSerializer,
-    TokenSerializer)
-from api.permissions import IsAdmin
+from .permissions import Admin, Superuser
+from .serializers import (UserSelfSerializer, UserSerializer,
+                          UserSignUpSerializer)
+from .services import check_token, generate_token
+
+User = get_user_model()
 
 
-class UserViewSet(viewsets.ModelViewSet):
+@api_view(['POST'])
+def sign_up(request):
+
+    username = request.data.get('username')
+    email = request.data.get('email')
+    try:
+        user = User.objects.get(username=username, email=email)
+    except User.DoesNotExist:
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.save()
+    token = generate_token(user)
+    send_mail(
+        'Yamdb confirmation code',
+        f'{token}',
+        settings.AUTH_EMAIL,
+        [f'{email}']
+    )
+
+    return Response(
+        {
+            "username": username,
+            "email": email
+        },
+        status=status.HTTP_200_OK
+    )
+
+
+@api_view(['POST'])
+def retrieve_token(request):
+    serializer = UserSignUpSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        user = get_object_or_404(User, username=request.data.get('username'))
+        if check_token(user, request.data.get('confirmation_code')):
+            access = AccessToken.for_user(user)
+            return Response(
+                {
+                    'token': str(access)
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            {
+                'confirmation_code': 'Confirmation code is invalid'
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAdmin,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = [Admin | Superuser]
     lookup_field = 'username'
+    pagination_class = PageNumberPagination
 
-    @action(methods=['GET', 'PATCH'],
-            url_path='me',
-            serializer_class=UserEditSerializer,
-            permission_classes=[permissions.IsAuthenticated],
-            detail=False)
-    def profile(self, request):
+    @action(
+        detail=False,
+        methods=['get', 'patch'],
+        permission_classes=[IsAuthenticated]
+    )
+    def me(self, request):
         user = request.user
+        serializer_class = UserSelfSerializer
+
         if request.method == 'GET':
-            serializer = self.get_serializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            serializer = serializer_class(user)
+            return Response(serializer.data)
 
-        if request.method == 'PATCH':
-            serializer = self.get_serializer(
-                user,
-                data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
+        serializer = serializer_class(user, partial=True, data=request.data)
+        if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response(serializer.data)
 
-
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
-def create_user(request):
-    serializer = RegisterSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-    user = get_object_or_404(
-        User,
-        username=serializer.validated_data['username']
-    )
-    confirmation_code = default_token_generator.make_token(user)
-    send_mail(
-        subject='YaMDb registration',
-        message=f'Your confirmation code: {confirmation_code}',
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-    )
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
-def get_jwt_token(request):
-    serializer = TokenSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user = get_object_or_404(
-        User,
-        username=serializer.validated_data['username']
-    )
-    if default_token_generator.check_token(
-        user, serializer.validated_data['confirmation_code']
-    ):
-        token = AccessToken.for_user(user)
-        return Response({'token': str(token)}, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors)
