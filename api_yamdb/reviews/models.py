@@ -77,8 +77,15 @@ class Review(models.Model):
         ]
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review')
+        ]
+
     def __str__(self):
-        return self.text
+        return f'{self.text}, {self.score}'
 
     def __repr__(self):
         return self.text[:100]
