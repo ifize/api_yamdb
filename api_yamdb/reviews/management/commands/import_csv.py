@@ -8,17 +8,17 @@ from reviews.models import (
     Genre,
     Review,
     Title,
+    TitleGenre,
 )
 from user.models import User
-
 FILE_MODEL = {
     'category': Category,
     'genre': Genre,
-    'titles': Title,
-    'users': User,
-    'review': Review,
-    'comments': Comment,
-    'user': User
+    # 'titles': Title,
+    # 'users': User,
+    # 'review': Review,
+    # 'comments': Comment,
+    # 'genre_title': TitleGenre,
 }
 
 

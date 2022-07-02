@@ -39,7 +39,9 @@ class Title(models.Model):
     # related_name - для использования Genre.title а не Genre.title_set
     # для обратного отношения
     genre = models.ManyToManyField(
-        Genre, related_name="titles", verbose_name="Жанр"
+        Genre,
+        verbose_name="Жанр",
+        through="TitleGenre",
     )
     category = models.ForeignKey(
         Category,
@@ -59,6 +61,27 @@ class Title(models.Model):
 
     def __str__(self):
         return self.title[:79]
+
+
+class TitleGenre(models.Model):
+    """Модель для реализации отношения ManyToMany title_id -- genre_id"""
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        verbose_name="Произведение"
+    )
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE,
+        verbose_name="Жанр"
+    )
+
+    class Meta:
+        verbose_name = "Произведение и жанр"
+        verbose_name_plural = "Произведения и жанры"
+
+    def __str__(self):
+        return f'{self.title} {self.genre}'
 
 
 class Review(models.Model):
