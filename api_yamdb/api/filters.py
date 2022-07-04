@@ -12,7 +12,6 @@ class TitleFilter(filters.FilterSet):
     # icontains - вхождение независимо от регистра (Sql ILIKE)
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     # диапазон дат от минимальной к максимальной, где задается пока неясно
-    year = filters.RangeFilter()
 
     class Meta:
         model = Title
