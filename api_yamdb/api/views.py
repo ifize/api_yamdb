@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, filters
 from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import Review, Category, Genre, Title
@@ -49,6 +49,8 @@ class CategoryViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
                       mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("name",)
     permission_classes = (IsAdminOrReadOnlyPermission,)
     # по умолчанию поиск объектов производится по pk, а нужно по slug
     lookup_field = 'slug'
@@ -58,6 +60,8 @@ class GenreViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
                    mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("name",)
     permission_classes = (IsAdminOrReadOnlyPermission,)
     lookup_field = 'slug'
 
