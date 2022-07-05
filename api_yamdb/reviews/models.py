@@ -15,9 +15,6 @@ class Category(models.Model):
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
 
-    def __str__(self):
-        return self.title[:79]
-
 
 class Genre(models.Model):
     name = models.CharField("Название жанра", max_length=100)
@@ -64,9 +61,6 @@ class Title(models.Model):
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
 
-    def __str__(self):
-        return self.title[:79]
-
 
 class TitleGenre(models.Model):
     """Модель для реализации отношения ManyToMany title_id -- genre_id"""
@@ -95,8 +89,8 @@ class Review(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
-        Title, on_delete=models.SET_NULL,
-        related_name='reviews', blank=True, null=True
+        Title, on_delete=models.CASCADE,
+        related_name='reviews'
     )
     score = models.IntegerField(
         validators=[
@@ -108,7 +102,7 @@ class Review(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['title', 'author'],
+                fields=['author', 'title'],
                 name='unique_review')
         ]
 
