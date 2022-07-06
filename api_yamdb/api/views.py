@@ -6,9 +6,10 @@ from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import Review, Category, Genre, Title
 from .filters import TitleFilter
-from .permissions import (IsAuthorOrReadOnlyPermission,
-                          IsAdminOrReadOnlyPermission,
-                          OnlyReadOrСhangeAuthorAdminModerator)
+from .permissions import (
+    IsAdminOrReadOnlyPermission,
+    IsAdminAuthorOrReadOnlyPermission
+)
 from .serializers import (
     CommentSerializer,
     ReviewSerializer,
@@ -23,7 +24,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (OnlyReadOrСhangeAuthorAdminModerator,)
+    permission_classes = (IsAdminAuthorOrReadOnlyPermission,)
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -36,15 +37,22 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (OnlyReadOrСhangeAuthorAdminModerator,)
+    permission_classes = (IsAdminAuthorOrReadOnlyPermission,)
 
     def get_queryset(self):
-        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
-        return review.comments.all()
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        queryset = get_object_or_404(
+            Review,
+            id=review_id,
+            title_id=title_id)
+        return queryset.comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
-        serializer.save(author=self.request.user, review=review)
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        instance = get_object_or_404(Review, id=review_id, title_id=title_id)
+        serializer.save(author=self.request.user, review=instance)
 
 
 class CategoryViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
@@ -54,7 +62,6 @@ class CategoryViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
     permission_classes = (IsAdminOrReadOnlyPermission,)
-    # по умолчанию поиск объектов производится по pk, а нужно по slug
     lookup_field = 'slug'
 
 
@@ -70,7 +77,7 @@ class GenreViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(
-       Avg('reviews__score')
+        Avg('reviews__score')
     )
     permission_classes = (IsAdminOrReadOnlyPermission,)
     filter_backends = (DjangoFilterBackend,)
