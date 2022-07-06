@@ -25,7 +25,10 @@ class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
     # переопределение поля, тк оне не задано в модели
-    rating = serializers.IntegerField()
+    # rating = serializers.IntegerField(read_only=True)
+    rating = serializers.FloatField(
+        source='reviews__score__avg', read_only=True
+    )
     # переопределение типа поля, чтобы оно было необязательным
     description = serializers.CharField(required=False,)
 
