@@ -11,7 +11,10 @@ from reviews.models import (
     TitleGenre,
 )
 from users.models import User
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1ff74161bfbfb8054a4ebeea01e9f3014fdd33f9
 FILE_MODEL = {
     'category': Category,
     'genre': Genre,

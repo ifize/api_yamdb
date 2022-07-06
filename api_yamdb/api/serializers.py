@@ -1,3 +1,4 @@
+from requests import request
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
@@ -53,10 +54,17 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
-
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
+
+    def validate(self, data):
+        request = self.context['request']
+        title_id = self.context.get('view').kwargs.get('title_id')
+        if request.stream.method == 'POST':
+            if Review.objects.filter(title=title_id, author=request.user).exists():
+                raise serializers.ValidationError('Можно оставить только один отзыв!')
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

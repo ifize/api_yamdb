@@ -95,8 +95,8 @@ class Review(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
-        Title, on_delete=models.SET_NULL,
-        related_name='reviews', blank=True, null=True
+        Title, on_delete=models.CASCADE,
+        related_name='reviews'
     )
     score = models.IntegerField(
         validators=[
@@ -108,7 +108,7 @@ class Review(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['title', 'author'],
+                fields=['author', 'title'],
                 name='unique_review')
         ]
 
