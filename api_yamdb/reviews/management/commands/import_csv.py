@@ -10,48 +10,55 @@ from reviews.models import (
     Title,
     TitleGenre,
 )
-from user.models import User
+from users.models import User
+
 FILE_MODEL = {
     'category': Category,
     'genre': Genre,
-    # 'titles': Title,
-    # 'users': User,
-    # 'review': Review,
-    # 'comments': Comment,
-    # 'genre_title': TitleGenre,
+    'titles': Title,
+    'users': User,
+    'review': Review,
+    'comments': Comment,
+    'genre_title': TitleGenre,
 }
 
 
 class Command(BaseCommand):
-    # вывод в консоль при python python manage.py import_csv --help
-    help = 'Команда для импорта данных из .csv файла'
+    help = 'Команда для импорта данных из .csv файла в БД'
 
     def handle(self, *args, **options):
         """
-        Функция импорта csv в базу данных проекта
-        Запуск производится командой python manage.py import_csv
+        Запуск произвести командой python manage.py import_csv
         Заполнить базу можно только один раз, при повторном заполнении
         появится ошибка UniqueConstraint
-        Если нужно удалить БД используйте python manage.py flush
-        Или просто удалите файл db.sqlite3
+        Для удаления БД использовать python manage.py flush
+        Или просто удалить файл db.sqlite3
         """
-        # открываем в менеджере контекста для автоматического закрытия файла
-        # аргумент newline - чтобы знаки абзаца случайно не попали в БД
         for file_name, model in FILE_MODEL.items():
             with open(
                     f'static/data/{file_name}.csv',
                     newline='',
                     encoding='utf-8'
             ) as csv_file:
-                # Ниже показано, как выглядит объект OrderedDict от DictReader
-                # DictReader =([('id', '1'), ('name', 'Фильм'), ('slug', 'movie')])
                 datareader = csv.DictReader(csv_file, delimiter=',')
-                model.objects.bulk_create(
-                    [model(**row) for row in datareader])
-                '''
-                Аналог кода:
-                Category.objects.bulk_create([Category(id=i['id'],
-                name=i['name'], slug=i['slug']) for i in datareader])
-                '''
-        print('Data import was successful')
+                if file_name == 'titles':
+                    for row in datareader:
+                        category = Category.objects.get(pk=row.pop('category'))
+                        obj = model(
+                            category=category,
+                            **row
+                        )
+                        obj.save()
+                elif file_name in ['review', 'comments']:
+                    for row in datareader:
+                        user = User.objects.get(pk=row.pop('author'))
+                        obj = model(
+                            author=user,
+                            **row
+                        )
+                        obj.save()
+                else:
+                    model.objects.bulk_create(
+                        [model(**row) for row in datareader])
+        print('Импорт данных произведён успешно')
 

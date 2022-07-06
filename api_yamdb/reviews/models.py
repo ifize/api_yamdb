@@ -16,7 +16,7 @@ class Category(models.Model):
         verbose_name_plural = "Категории"
 
     def __str__(self):
-        return self.title[:79]
+        return self.name[:79]
 
 
 class Genre(models.Model):
@@ -28,7 +28,7 @@ class Genre(models.Model):
         verbose_name_plural = "Жанры"
 
     def __str__(self):
-        return self.title[:79]
+        return self.name[:79]
 
 
 class Title(models.Model):
@@ -65,7 +65,7 @@ class Title(models.Model):
         verbose_name_plural = "Произведения"
 
     def __str__(self):
-        return self.title[:79]
+        return self.name[:79]
 
 
 class TitleGenre(models.Model):
@@ -128,5 +128,5 @@ class Comment(models.Model):
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments')
     text = models.TextField()
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
