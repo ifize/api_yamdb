@@ -11,7 +11,6 @@ class Category(models.Model):
     slug = models.SlugField("Slug категории", max_length=100, unique=True)
 
     class Meta:
-        # поля в админке
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
 
@@ -34,10 +33,7 @@ class Genre(models.Model):
 class Title(models.Model):
     name = models.CharField("Название произведения", max_length=100)
     year = models.IntegerField("Год выпуска",)
-    # если поле пустое - NULL; необязательное поле
     description = models.TextField("Описание", null=True, blank=True)
-    # related_name - для использования Genre.title а не Genre.title_set
-    # для обратного отношения
     genre = models.ManyToManyField(
         Genre,
         verbose_name="Жанр",
@@ -45,10 +41,6 @@ class Title(models.Model):
     )
     category = models.ForeignKey(
         Category,
-        # on_delete - обязательное поле, при удалении объекта категории
-        # произведение остаётся
-        # для genre on_delete е указываем, так как оно необязательно для
-        # ManyToManyField
         on_delete=models.SET_NULL,
         null=True,
         related_name="titles",
@@ -111,6 +103,7 @@ class Review(models.Model):
                 fields=['author', 'title'],
                 name='unique_review')
         ]
+        ordering = ['pub_date']
 
     def __str__(self):
         return f'{self.text}, {self.score}'
@@ -118,11 +111,9 @@ class Review(models.Model):
     def __repr__(self):
         return self.text[:100]
 
-    class Meta:
-        ordering = ['pub_date']
-
 
 class Comment(models.Model):
+
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='comments')
     review = models.ForeignKey(
@@ -130,3 +121,6 @@ class Comment(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
+
+    def __str__(self):
+        return f'{self.author}, {self.pub_date}: {self.text}'
