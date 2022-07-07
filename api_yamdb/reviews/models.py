@@ -46,11 +46,6 @@ class Title(models.Model):
         related_name="titles",
         verbose_name="Категория",
     )
-    rating = models.IntegerField(
-        null=True,
-        default=None,
-        verbose_name='Рейтинг',
-    )
 
     class Meta:
         verbose_name = "Произведение"

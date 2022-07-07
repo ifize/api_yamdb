@@ -8,23 +8,21 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ("name", "slug",)
+        exclude = ('id',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ("name", "slug",)
+        exclude = ('id',)
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
     """Сериалайзер для запроса GET"""
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.FloatField(
-        source='reviews__score__avg', read_only=True
-    )
+    rating = serializers.IntegerField(read_only=True)
     description = serializers.CharField(required=False,)
 
     class Meta:
@@ -45,9 +43,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = (
-            "id", "name", "year", "rating", "description", "genre", "category"
-        )
+        fields = ("id", "name", "year", "description", "genre", "category")
 
 
 class ReviewSerializer(serializers.ModelSerializer):
