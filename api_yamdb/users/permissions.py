@@ -7,34 +7,16 @@ class Superuser(permissions.BasePermission):
             return request.user.is_superuser
         return False
 
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_authenticated:
-            return request.user.is_superuser
-        return False
-
 
 class Admin(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            return request.user.role == 'admin'
-        return False
-
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_authenticated:
-            return request.user.role == 'admin'
-        return False
+        return request.user.is_authenticated and (
+            request.user.is_admin or request.user.is_superuser)
 
 
 class Moderator(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            return request.user.role == 'moderator'
-        return False
-
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_authenticated:
-            return request.user.role == 'moderator'
-        return False
+        return request.user.is_authenticated and request.user.is_moderator
 
 
 class User(permissions.BasePermission):

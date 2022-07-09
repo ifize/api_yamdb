@@ -19,30 +19,35 @@ User = get_user_model()
 
 @api_view(['POST'])
 def sign_up(request):
-
-    username = request.data.get('username')
+    serializer = UserSerializer(data=request.data)
     email = request.data.get('email')
-    try:
-        user = User.objects.get(username=username, email=email)
-    except User.DoesNotExist:
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
-    token = generate_token(user)
-    send_mail(
-        'Yamdb confirmation code',
-        f'{token}',
-        settings.AUTH_EMAIL,
-        [f'{email}']
-    )
+    user = User.objects.filter(email=email)
 
-    return Response(
-        {
-            "username": username,
-            "email": email
-        },
-        status=status.HTTP_200_OK
-    )
+    if user.exists():
+        user = user.get(email=email)
+        generate_token(user)
+        return Response(
+            {'message': 'Пользователь с такой электронной почтой уже '
+                        'существует. Код подтверждения отправлен повторно. '
+             },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    else:
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data.get('email')
+        username = serializer.validated_data.get('username')
+        user, created = User.objects.get_or_create(username=username,
+                                                   email=email)
+        generate_token(user)
+        token = generate_token(user)
+        send_mail(
+            'Yamdb confirmation code',
+            f'{token}',
+            settings.AUTH_EMAIL,
+            [f'{email}']
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
